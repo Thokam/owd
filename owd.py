@@ -98,49 +98,9 @@ class owd:
         else: 
             direction = "NotFound"
 
-        if direction == "NotFound":
-            direction_human = "NotFound"
-        else:
-            direction_human = float(direction)
-
-            if direction_human<= 11.25:
-                direction_human= "Nord"
-            elif direction_human> 11.25 and direction_human<= 33.75:
-                direction_human= "NordNordOst"
-            elif direction_human> 33.75 and direction_human<= 56.25:
-                direction_human= "NordOst"
-            elif direction_human> 56.25 and direction_human<= 78.75:
-                direction_human= "OstNordOst"
-            elif direction_human> 78.75 and direction_human<= 101.25:
-                direction_human= "Ost"
-            elif direction_human> 101.25 and direction_human<= 123.75:
-                direction_human= "OstSüdOst"
-            elif direction_human> 123.75 and direction_human<= 146.25:
-                direction_human= "SüdOst"
-            elif direction_human> 146.25 and direction_human<= 168.75:
-                direction_human= "SüdSüdOst"
-            elif direction_human> 168.75 and direction_human<= 191.25:
-                direction_human= "Süd"
-            elif direction_human> 191.25 and direction_human<= 213.75:
-                direction_human= "SüdSüdWest"
-            elif direction_human> 213.75 and direction_human<= 236.25:
-                direction_human= "SüdWest"
-            elif direction_human> 236.25 and direction_human<= 258.75:
-                direction_human= "WestSüdWest"
-            elif direction_human> 258.75 and direction_human<= 281.25:
-                direction_human= "West"
-            elif direction_human> 281.25 and direction_human<= 303.75:
-                direction_human= "WestNordWest"
-            elif direction_human> 303.75 and direction_human<= 326.25:
-                direction_human= "NordWest"
-            elif direction_human> 326.25 and direction_human<= 348.75:
-                direction_human= "NordNordWest"
-            elif direction_human> 348.75:
-                direction_human= "NordOst"
-            else: 
-                direction_human= "Error"
-
+        direction_human = self.getHumanDir(direction)
         return direction, direction_human, speed
+
 
     #check if humidity exists
     def hasCHum(self):
@@ -261,15 +221,171 @@ class owd:
                 desc.append(con["description"])
         return desc
 
+    def getForecastPressure(self):
+        
+        temp_zeit=[]
+        temp_werte=[]
 
+        for condition in self.forecast["list"]:
+            tz= condition["dt_txt"]
+            temp_zeit.append(tz.split(" ")[0]+"\n"+tz.split(" ")[1])
+            try:
+                temp=condition["main"]["pressure"]
+            except KeyError:
+                temp="NotFound"
+            temp_werte.append(temp)
 
-#Utility
-    def plotForecastTemp(self, zeit, temp):
+        return temp_zeit, temp_werte
+
+    def getForecastHumidity(self):
+        
+        temp_zeit=[]
+        temp_werte=[]
+
+        for condition in self.forecast["list"]:
+            tz= condition["dt_txt"]
+            temp_zeit.append(tz.split(" ")[0]+"\n"+tz.split(" ")[1])
+            try:
+                temp=condition["main"]["humidity"]
+            except KeyError:
+                temp= "NotFound"
+            temp_werte.append(temp)
+
+        return temp_zeit, temp_werte
+
+    def getForecastClouds(self):
+        
+        temp_zeit=[]
+        temp_werte=[]
+
+        for condition in self.forecast["list"]:
+            tz= condition["dt_txt"]
+            temp_zeit.append(tz.split(" ")[0]+"\n"+tz.split(" ")[1])
+            try:
+                temp=condition["clouds"]["all"]
+            except KeyError:
+                temp="NotFound"
+            temp_werte.append(temp)
+
+        return temp_zeit, temp_werte
+
+    def getForecastWindSpeed(self):
+        
+        temp_zeit=[]
+        temp_werte=[]
+
+        for condition in self.forecast["list"]:
+            tz= condition["dt_txt"]
+            temp_zeit.append(tz.split(" ")[0]+"\n"+tz.split(" ")[1])
+            try:
+                temp=condition["wind"]["speed"]
+            except KeyError:
+                temp="NotFound"
+            temp_werte.append(temp)
+
+        return temp_zeit, temp_werte    
+
+    def getForecastWindDirection(self):
+        
+        temp_zeit=[]
+        temp_werte=[]
+
+        for condition in self.forecast["list"]:
+            tz= condition["dt_txt"]
+            temp_zeit.append(tz.split(" ")[0]+"\n"+tz.split(" ")[1])
+            try:
+                temp=condition["wind"]["deg"]
+            except KeyError:
+                temp="NotFound"
+            temp_werte.append(temp)
+
+        return temp_zeit, temp_werte    
+
+    def getForecastRain3h(self):
+        
+        temp_zeit=[]
+        temp_werte=[]
+
+        for condition in self.forecast["list"]:
+            tz= condition["dt_txt"]
+            temp_zeit.append(tz.split(" ")[0]+"\n"+tz.split(" ")[1])
+            try: 
+                temp=condition["rain"]["3h"]
+            except KeyError:
+                temp=0
+            temp_werte.append(temp)
+
+        return temp_zeit, temp_werte    
+
+    def getForecastSnow3h(self):
+        
+        temp_zeit=[]
+        temp_werte=[]
+
+        for condition in self.forecast["list"]:
+            tz= condition["dt_txt"]
+            temp_zeit.append(tz.split(" ")[0]+"\n"+tz.split(" ")[1])
+            try:
+                temp=condition["snow"]["3h"]
+            except KeyError:
+                temp=0
+            temp_werte.append(temp)
+
+        return temp_zeit, temp_werte   
+
+    #Utility
+    #Plots a diagram from two arrays with time-index and values
+    def plotForecast(self, zeit, temp, title):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.plot(zeit, temp)
         ax.grid(True)
-        fig.suptitle("Vorhersage Temperatur.")
+        fig.suptitle(title)
         ax.xaxis.set_major_locator(ticker.MultipleLocator(4))
         ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
         plt.show()
+
+    #Translate winddirection from degree to human readable form
+    def getHumanDir(self, direction):
+        if direction == "NotFound":
+            direction_human = "NotFound"
+        else:
+            direction_human = float(direction)
+
+            if direction_human<= 11.25:
+                direction_human= "Nord"
+            elif direction_human> 11.25 and direction_human<= 33.75:
+                direction_human= "NordNordOst"
+            elif direction_human> 33.75 and direction_human<= 56.25:
+                direction_human= "NordOst"
+            elif direction_human> 56.25 and direction_human<= 78.75:
+                direction_human= "OstNordOst"
+            elif direction_human> 78.75 and direction_human<= 101.25:
+                direction_human= "Ost"
+            elif direction_human> 101.25 and direction_human<= 123.75:
+                direction_human= "OstSüdOst"
+            elif direction_human> 123.75 and direction_human<= 146.25:
+                direction_human= "SüdOst"
+            elif direction_human> 146.25 and direction_human<= 168.75:
+                direction_human= "SüdSüdOst"
+            elif direction_human> 168.75 and direction_human<= 191.25:
+                direction_human= "Süd"
+            elif direction_human> 191.25 and direction_human<= 213.75:
+                direction_human= "SüdSüdWest"
+            elif direction_human> 213.75 and direction_human<= 236.25:
+                direction_human= "SüdWest"
+            elif direction_human> 236.25 and direction_human<= 258.75:
+                direction_human= "WestSüdWest"
+            elif direction_human> 258.75 and direction_human<= 281.25:
+                direction_human= "West"
+            elif direction_human> 281.25 and direction_human<= 303.75:
+                direction_human= "WestNordWest"
+            elif direction_human> 303.75 and direction_human<= 326.25:
+                direction_human= "NordWest"
+            elif direction_human> 326.25 and direction_human<= 348.75:
+                direction_human= "NordNordWest"
+            elif direction_human> 348.75:
+                direction_human= "Nord"
+            else: 
+                direction_human= "Error"
+        return direction_human
